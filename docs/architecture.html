@@ -1,0 +1,693 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recruitment Screening â€” System Architecture</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a2e;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        .badge {
+            display: inline-block;
+            background: #E31837;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        /* Architecture Diagram */
+        .arch-diagram {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .arch-diagram h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #1a1a1a;
+        }
+        .tier-row {
+            display: flex;
+            gap: 16px;
+            align-items: stretch;
+            margin-bottom: 16px;
+        }
+        .tier-label {
+            width: 120px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+        }
+        .tier-content {
+            flex: 1;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .box {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px 20px;
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        .box-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .box-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .box-tech {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 6px;
+            font-style: italic;
+        }
+        .box.frontend { border-left: 3px solid #3b82f6; }
+        .box.backend { border-left: 3px solid #10b981; }
+        .box.agent { border-left: 3px solid #E31837; }
+        .box.llm { border-left: 3px solid #8b5cf6; }
+        .box.infra { border-left: 3px solid #f59e0b; }
+
+        .arrow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+            color: #9ca3af;
+            font-size: 20px;
+        }
+
+        /* Pipeline Section */
+        .pipeline-section {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .pipeline-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #1a1a1a;
+        }
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 140px;
+        }
+        .step-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .step-circle.s1 { background: #3b82f6; }
+        .step-circle.s2 { background: #10b981; }
+        .step-circle.s3 { background: #f59e0b; }
+        .step-circle.s4 { background: #E31837; }
+        .step-circle.s5 { background: #8b5cf6; }
+        .step-circle.s6 { background: #1a1a1a; }
+        .step-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            text-align: center;
+        }
+        .step-model {
+            font-size: 10px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 2px;
+        }
+        .pipeline-arrow {
+            width: 32px;
+            height: 2px;
+            background: #d1d5db;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .pipeline-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            border: 5px solid transparent;
+            border-left: 6px solid #d1d5db;
+        }
+
+        /* Data Flow Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+        .data-table th {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 10px 14px;
+            color: #4b5563;
+        }
+        .data-table tr:hover td {
+            background: #f9fafb;
+        }
+        .mono {
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 12px;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* Tech Stack */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .tech-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .tech-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .tech-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .tech-card li {
+            font-size: 12px;
+            color: #6b7280;
+            padding: 3px 0;
+        }
+        .tech-card li::before {
+            content: 'â€¢';
+            color: #E31837;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="badge">the organization</span>
+            <h1>AI Recruitment Screening</h1>
+            <p>Multi-Agent Pipeline Architecture &amp; System Design</p>
+        </div>
+
+        <!-- High-Level Architecture -->
+        <div class="arch-diagram">
+            <h2>System Architecture</h2>
+
+            <div class="tier-row">
+                <div class="tier-label">Frontend</div>
+                <div class="tier-content">
+                    <div class="box frontend">
+                        <div class="box-title">React SPA</div>
+                        <div class="box-desc">File upload dropzones, progress indicator, markdown report renderer</div>
+                        <div class="box-tech">Vite + React 18 + react-markdown</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-row">â†“ HTTP POST multipart/form-data â†“</div>
+
+            <div class="tier-row">
+                <div class="tier-label">API Layer</div>
+                <div class="tier-content">
+                    <div class="box backend">
+                        <div class="box-title">FastAPI Server</div>
+                        <div class="box-desc">Receives uploads, validates files, triggers pipeline, returns JSON response</div>
+                        <div class="box-tech">uvicorn + CORS + async thread offload</div>
+                    </div>
+                    <div class="box backend">
+                        <div class="box-title">Input Validator</div>
+                        <div class="box-desc">Checks format (.pdf/.docx/.txt), size â‰¤5MB, non-empty</div>
+                        <div class="box-tech">Non-fail-fast aggregated validation</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-row">â†“ Validated file paths â†“</div>
+
+            <div class="tier-row">
+                <div class="tier-label">Processing</div>
+                <div class="tier-content">
+                    <div class="box infra">
+                        <div class="box-title">Text Extractor</div>
+                        <div class="box-desc">Converts PDF/DOCX to raw text</div>
+                        <div class="box-tech">pdfplumber + python-docx</div>
+                    </div>
+                    <div class="box agent">
+                        <div class="box-title">CrewAI Pipeline</div>
+                        <div class="box-desc">5 sequential AI agents with context chaining</div>
+                        <div class="box-tech">CrewAI Crew (sequential mode)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-row">â†“ Raw agent outputs â†“</div>
+
+            <div class="tier-row">
+                <div class="tier-label">LLM Providers</div>
+                <div class="tier-content">
+                    <div class="box llm">
+                        <div class="box-title">Amazon Bedrock</div>
+                        <div class="box-desc">Claude Sonnet â€” parsing, matching, evaluation</div>
+                        <div class="box-tech">Private gateway endpoint</div>
+                    </div>
+                    <div class="box llm">
+                        <div class="box-title">Groq Cloud</div>
+                        <div class="box-desc">Llama 3.3 70B â€” question gen + report formatting</div>
+                        <div class="box-tech">Dual API keys for rate limit avoidance</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Flow -->
+        <div class="pipeline-section">
+            <h2>Agent Pipeline (Sequential Execution)</h2>
+            <div class="pipeline-flow">
+                <div class="pipeline-step">
+                    <div class="step-circle s1">1</div>
+                    <div class="step-name">JD Parser</div>
+                    <div class="step-model">Bedrock</div>
+                </div>
+                <div class="pipeline-arrow"></div>
+                <div class="pipeline-step">
+                    <div class="step-circle s2">2</div>
+                    <div class="step-name">Resume Parser</div>
+                    <div class="step-model">Bedrock</div>
+                </div>
+                <div class="pipeline-arrow"></div>
+                <div class="pipeline-step">
+                    <div class="step-circle s3">3</div>
+                    <div class="step-name">Skills Matcher</div>
+                    <div class="step-model">Bedrock</div>
+                </div>
+                <div class="pipeline-arrow"></div>
+                <div class="pipeline-step">
+                    <div class="step-circle s4">4</div>
+                    <div class="step-name">Evaluator</div>
+                    <div class="step-model">Bedrock</div>
+                </div>
+                <div class="pipeline-arrow"></div>
+                <div class="pipeline-step">
+                    <div class="step-circle s5">5</div>
+                    <div class="step-name">Question Gen</div>
+                    <div class="step-model">Groq</div>
+                </div>
+                <div class="pipeline-arrow"></div>
+                <div class="pipeline-step">
+                    <div class="step-circle s6">R</div>
+                    <div class="step-name">Report Formatter</div>
+                    <div class="step-model">Groq</div>
+                </div>
+            </div>
+
+            <!-- Agent Details Table -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Agent</th>
+                        <th>Role</th>
+                        <th>Input</th>
+                        <th>Output</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. JD Parser</strong></td>
+                        <td>Job Description Analyst</td>
+                        <td>Raw JD text</td>
+                        <td>role_title, required_skills, preferred_skills, experience_level</td>
+                        <td><span class="mono">src/agents/jd_parser.py</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Resume Parser</strong></td>
+                        <td>Data Extraction Specialist</td>
+                        <td>Raw resume text</td>
+                        <td>name, email, skills, work_experience, education, certifications</td>
+                        <td><span class="mono">src/agents/resume_parser.py</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Skills Matcher</strong></td>
+                        <td>Lead Technical Assessor</td>
+                        <td>Agent 1 + Agent 2 outputs</td>
+                        <td>Skill classifications (matched/partial/not_found), gaps, bonus skills</td>
+                        <td><span class="mono">src/agents/skills_matcher.py</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Candidate Evaluator</strong></td>
+                        <td>Hiring Committee Analyst</td>
+                        <td>Agent 1 + 2 + 3 outputs</td>
+                        <td>Score (0-100), recommendation, category breakdown, strengths/weaknesses</td>
+                        <td><span class="mono">src/agents/candidate_evaluator.py</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Question Generator</strong></td>
+                        <td>Interview Architect</td>
+                        <td>Agent 3 + 4 outputs</td>
+                        <td>5-10 targeted interview questions with rubrics</td>
+                        <td><span class="mono">src/agents/question_generator.py</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>R. Report Formatter</strong></td>
+                        <td>Report Generation (non-agent)</td>
+                        <td>All 5 raw outputs</td>
+                        <td>Professional Markdown evaluation report</td>
+                        <td><span class="mono">src/pipeline.py</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Data Flow -->
+        <div class="pipeline-section">
+            <h2>Request Lifecycle</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Action</th>
+                        <th>Component</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>User uploads resume + JD via drag-and-drop UI</td>
+                        <td>React Frontend</td>
+                        <td><span class="mono">frontend/src/App.jsx</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>POST /analyze with multipart/form-data</td>
+                        <td>Axios HTTP Client</td>
+                        <td><span class="mono">frontend/src/App.jsx</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>FastAPI receives files, saves to temp directory</td>
+                        <td>API Layer</td>
+                        <td><span class="mono">src/api/main.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Validate file format, size, non-empty</td>
+                        <td>InputValidator</td>
+                        <td><span class="mono">src/input_validator.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Extract text from PDF/DOCX (skip for TXT)</td>
+                        <td>FileExtractor</td>
+                        <td><span class="mono">src/file_extractor.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Create 5 CrewAI agents + tasks, run sequentially</td>
+                        <td>RecruitmentPipeline</td>
+                        <td><span class="mono">src/pipeline.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Each agent calls LLM, outputs JSON string</td>
+                        <td>CrewAI Crew</td>
+                        <td><span class="mono">src/agents/*.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Collect raw outputs, send to Groq for report formatting</td>
+                        <td>Report Generator</td>
+                        <td><span class="mono">src/pipeline.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Return JSON {success, markdown_report, raw_outputs, timing}</td>
+                        <td>FastAPI Response</td>
+                        <td><span class="mono">src/api/main.py</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Render markdown report + download button</td>
+                        <td>React Frontend</td>
+                        <td><span class="mono">frontend/src/App.jsx</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="pipeline-section">
+            <h2>Technology Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4>Frontend</h4>
+                    <ul>
+                        <li>React 18</li>
+                        <li>Vite (build tool)</li>
+                        <li>react-markdown + remark-gfm</li>
+                        <li>Axios (HTTP client)</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>Backend</h4>
+                    <ul>
+                        <li>Python 3.12</li>
+                        <li>FastAPI + Uvicorn</li>
+                        <li>python-multipart (file uploads)</li>
+                        <li>python-dotenv (env config)</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>AI / LLM</h4>
+                    <ul>
+                        <li>CrewAI (agent framework)</li>
+                        <li>LiteLLM (LLM routing)</li>
+                        <li>Amazon Bedrock (Claude Sonnet)</li>
+                        <li>Groq (Llama 3.3 70B)</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>Document Processing</h4>
+                    <ul>
+                        <li>pdfplumber (PDF extraction)</li>
+                        <li>python-docx (DOCX extraction)</li>
+                        <li>CrewAI FileReadTool (TXT)</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>Observability</h4>
+                    <ul>
+                        <li>CrewAI Tracing (CrewAI+)</li>
+                        <li>Verbose agent logging</li>
+                        <li>Pipeline timing records</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>Design</h4>
+                    <ul>
+                        <li>the organization brand system</li>
+                        <li>Responsive single-column layout</li>
+                        <li>Drag-and-drop file inputs</li>
+                        <li>Indeterminate progress indicator</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- LLM Routing -->
+        <div class="pipeline-section">
+            <h2>LLM Routing Strategy</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Agent</th>
+                        <th>Provider</th>
+                        <th>Model</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>JD Parser</td>
+                        <td>Amazon Bedrock</td>
+                        <td>Claude Sonnet</td>
+                        <td>High accuracy for structured extraction</td>
+                    </tr>
+                    <tr>
+                        <td>Resume Parser</td>
+                        <td>Amazon Bedrock</td>
+                        <td>Claude Sonnet</td>
+                        <td>High accuracy for structured extraction</td>
+                    </tr>
+                    <tr>
+                        <td>Skills Matcher</td>
+                        <td>Amazon Bedrock</td>
+                        <td>Claude Sonnet</td>
+                        <td>Semantic reasoning capability</td>
+                    </tr>
+                    <tr>
+                        <td>Candidate Evaluator</td>
+                        <td>Amazon Bedrock</td>
+                        <td>Claude Sonnet</td>
+                        <td>Complex scoring logic</td>
+                    </tr>
+                    <tr>
+                        <td>Question Generator</td>
+                        <td>Groq</td>
+                        <td>Llama 3.3 70B</td>
+                        <td>Avoids Bedrock rate limits, large context window</td>
+                    </tr>
+                    <tr>
+                        <td>Report Formatter</td>
+                        <td>Groq</td>
+                        <td>Llama 3.3 70B</td>
+                        <td>Fast, cost-effective formatting task</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Key Design Decisions -->
+        <div class="pipeline-section">
+            <h2>Key Design Decisions</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Decision</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CrewAI as library (not framework)</td>
+                        <td>Full control over web layer, file handling, custom API responses</td>
+                    </tr>
+                    <tr>
+                        <td>Sequential agent execution</td>
+                        <td>Each agent builds on previous output â€” JD+Resume â†’ Skills â†’ Score â†’ Questions</td>
+                    </tr>
+                    <tr>
+                        <td>Raw JSON output (no Pydantic parsing)</td>
+                        <td>More reliable with non-OpenAI models that don't support function calling</td>
+                    </tr>
+                    <tr>
+                        <td>Dual LLM providers</td>
+                        <td>Splits load across Bedrock and Groq to avoid rate limits and reduce latency</td>
+                    </tr>
+                    <tr>
+                        <td>Thread offloading (asyncio.to_thread)</td>
+                        <td>CrewAI is synchronous; offloading prevents blocking FastAPI's async event loop</td>
+                    </tr>
+                    <tr>
+                        <td>LLM-based report generation</td>
+                        <td>More flexible than template rendering â€” handles varied agent output formats gracefully</td>
+                    </tr>
+                    <tr>
+                        <td>Indeterminate progress bar (not step-based)</td>
+                        <td>Honest UX â€” backend doesn't stream per-agent progress, so we don't fake it</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            AI Recruitment Screening â€” the organization Internal Tool â€” Architecture Document v1.0
+        </div>
+    </div>
+</body>
+</html>
