@@ -1,4 +1,4 @@
-﻿# HireLens
+# HireLens
 
 **Multi-agent recruitment screening pipeline built with CrewAI.** Parses a job description and a stack of resumes, scores each candidate against the role, and generates tailored interview questions per candidate.
 
