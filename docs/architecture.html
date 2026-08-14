@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Recruitment Screening â€” System Architecture</title>
+    <title>AI Recruitment Screening — System Architecture</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -258,7 +258,7 @@
             padding: 3px 0;
         }
         .tech-card li::before {
-            content: 'â€¢';
+            content: '•';
             color: #E31837;
             margin-right: 8px;
             font-weight: bold;
@@ -299,7 +299,7 @@
                 </div>
             </div>
 
-            <div class="arrow-row">â†“ HTTP POST multipart/form-data â†“</div>
+            <div class="arrow-row">↓ HTTP POST multipart/form-data ↓</div>
 
             <div class="tier-row">
                 <div class="tier-label">API Layer</div>
@@ -311,13 +311,13 @@
                     </div>
                     <div class="box backend">
                         <div class="box-title">Input Validator</div>
-                        <div class="box-desc">Checks format (.pdf/.docx/.txt), size â‰¤5MB, non-empty</div>
+                        <div class="box-desc">Checks format (.pdf/.docx/.txt), size ≤5MB, non-empty</div>
                         <div class="box-tech">Non-fail-fast aggregated validation</div>
                     </div>
                 </div>
             </div>
 
-            <div class="arrow-row">â†“ Validated file paths â†“</div>
+            <div class="arrow-row">↓ Validated file paths ↓</div>
 
             <div class="tier-row">
                 <div class="tier-label">Processing</div>
@@ -335,19 +335,19 @@
                 </div>
             </div>
 
-            <div class="arrow-row">â†“ Raw agent outputs â†“</div>
+            <div class="arrow-row">↓ Raw agent outputs ↓</div>
 
             <div class="tier-row">
                 <div class="tier-label">LLM Providers</div>
                 <div class="tier-content">
                     <div class="box llm">
                         <div class="box-title">Amazon Bedrock</div>
-                        <div class="box-desc">Claude Sonnet â€” parsing, matching, evaluation</div>
+                        <div class="box-desc">Claude Sonnet — parsing, matching, evaluation</div>
                         <div class="box-tech">Private gateway endpoint</div>
                     </div>
                     <div class="box llm">
                         <div class="box-title">Groq Cloud</div>
-                        <div class="box-desc">Llama 3.3 70B â€” question gen + report formatting</div>
+                        <div class="box-desc">Llama 3.3 70B — question gen + report formatting</div>
                         <div class="box-tech">Dual API keys for rate limit avoidance</div>
                     </div>
                 </div>
@@ -659,7 +659,7 @@
                     </tr>
                     <tr>
                         <td>Sequential agent execution</td>
-                        <td>Each agent builds on previous output â€” JD+Resume â†’ Skills â†’ Score â†’ Questions</td>
+                        <td>Each agent builds on previous output — JD+Resume → Skills → Score → Questions</td>
                     </tr>
                     <tr>
                         <td>Raw JSON output (no Pydantic parsing)</td>
@@ -675,18 +675,18 @@
                     </tr>
                     <tr>
                         <td>LLM-based report generation</td>
-                        <td>More flexible than template rendering â€” handles varied agent output formats gracefully</td>
+                        <td>More flexible than template rendering — handles varied agent output formats gracefully</td>
                     </tr>
                     <tr>
                         <td>Indeterminate progress bar (not step-based)</td>
-                        <td>Honest UX â€” backend doesn't stream per-agent progress, so we don't fake it</td>
+                        <td>Honest UX — backend doesn't stream per-agent progress, so we don't fake it</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="footer">
-            AI Recruitment Screening â€” the organization Internal Tool â€” Architecture Document v1.0
+            AI Recruitment Screening — the organization Internal Tool — Architecture Document v1.0
         </div>
     </div>
 </body>
